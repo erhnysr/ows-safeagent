@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OWS SafeAgent</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, sans-serif; background: #0a0a0a; color: #fff; padding: 24px; }
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+.logo { font-size: 20px; font-weight: 700; }
+.logo span { color: #22c55e; }
+.badge { background: #1a1a1a; border: 1px solid #333; padding: 6px 12px; border-radius: 20px; font-size: 12px; color: #22c55e; }
+.metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+.metric { background: #111; border: 1px solid #222; border-radius: 12px; padding: 16px; }
+.metric-label { font-size: 12px; color: #666; margin-bottom: 8px; }
+.metric-value { font-size: 28px; font-weight: 700; }
+.green { color: #22c55e; }
+.red { color: #ef4444; }
+.amber { color: #f59e0b; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.card { background: #111; border: 1px solid #222; border-radius: 12px; padding: 16px; }
+.card-title { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+.bar-wrap { margin-bottom: 16px; }
+.bar-labels { display: flex; justify-content: space-between; font-size: 12px; color: #666; margin-bottom: 6px; }
+.bar-track { height: 8px; background: #222; border-radius: 4px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; background: #22c55e; transition: width 0.5s; }
+.bar-fill.warn { background: #f59e0b; }
+.bar-fill.danger { background: #ef4444; }
+.rule { display: flex; align-items: center; gap: 10px; padding: 10px; background: #0d0d0d; border-radius: 8px; margin-bottom: 8px; }
+.rule-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; }
+.rule-name { font-size: 13px; flex: 1; }
+.rule-val { font-size: 12px; color: #666; }
+.cfg { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #1a1a1a; }
+.cfg:last-child { border-bottom: none; }
+.cfg label { font-size: 13px; color: #aaa; }
+.cfg input { background: #0d0d0d; border: 1px solid #333; color: #fff; padding: 6px 10px; border-radius: 6px; width: 100px; text-align: right; font-size: 13px; }
+.controls { display: flex; gap: 10px; margin-bottom: 12px; align-items: center; }
+.btn { padding: 8px 20px; border-radius: 8px; border: 1px solid #333; background: #1a1a1a; color: #fff; font-size: 13px; cursor: pointer; }
+.btn:hover { background: #222; }
+.btn-primary { background: #22c55e; border-color: #22c55e; color: #000; font-weight: 600; }
+.btn-primary:hover { background: #16a34a; }
+.log { max-height: 400px; overflow-y: auto; }
+.log-item { display: flex; gap: 12px; padding: 12px; border: 1px solid #1a1a1a; border-radius: 8px; margin-bottom: 8px; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity:0; transform: translateY(-4px); } to { opacity:1; transform:translateY(0); } }
+.log-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+.log-icon.APPROVED { background: #052e16; color: #22c55e; }
+.log-icon.DENIED { background: #2d0a0a; color: #ef4444; }
+.log-body { flex: 1; }
+.log-top { display: flex; justify-content: space-between; margin-bottom: 4px; }
+.log-asset { font-size: 14px; font-weight: 600; }
+.log-dir { font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+.log-dir.BUY { background: #052e16; color: #22c55e; }
+.log-dir.SELL { background: #2d0a0a; color: #ef4444; }
+.log-time { font-size: 11px; color: #666; }
+.log-reason { font-size: 12px; color: #888; margin-bottom: 4px; }
+.log-policy { font-size: 11px; padding: 3px 8px; border-radius: 4px; display: inline-block; }
+.log-policy.allow { background: #052e16; color: #22c55e; }
+.log-policy.deny { background: #2d0a0a; color: #ef4444; }
+.empty { text-align: center; padding: 40px; color: #444; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo">OWS <span>SafeAgent</span></div>
+  <div class="badge">● OWS Connected · Sepolia Testnet</div>
+</div>
+<div class="metrics">
+  <div class="metric"><div class="metric-label">Today's Spend</div><div class="metric-value amber" id="m-spent">0.000</div><div style="font-size:11px;color:#666;margin-top:4px">ETH</div></div>
+  <div class="metric"><div class="metric-label">Remaining</div><div class="metric-value green" id="m-remain">0.100</div><div style="font-size:11px;color:#666;margin-top:4px">ETH today</div></div>
+  <div class="metric"><div class="metric-label">Approved</div><div class="metric-value green" id="m-approved">0</div><div style="font-size:11px;color:#666;margin-top:4px">transactions</div></div>
+  <div class="metric"><div class="metric-label">Denied by Policy</div><div class="metric-value red" id="m-denied">0</div><div style="font-size:11px;color:#666;margin-top:4px">blocked</div></div>
+</div>
+<div class="grid">
+  <div class="card">
+    <div class="card-title">Policy Engine — Active Rules</div>
+    <div class="rule"><div class="rule-dot"></div><div class="rule-name">Chain Allowlist</div><div class="rule-val">Sepolia, Base</div></div>
+    <div class="rule"><div class="rule-dot"></div><div class="rule-name">Per-tx Limit</div><div class="rule-val" id="r-pertx">0.050 ETH</div></div>
+    <div class="rule"><div class="rule-dot"></div><div class="rule-name">Daily Cap</div><div class="rule-val" id="r-daily">0.100 ETH</div></div>
+    <div class="rule"><div class="rule-dot"></div><div class="rule-name">Key Exposure</div><div class="rule-val green">Never</div></div>
+    <div style="margin-top:12px;">
+      <div class="bar-labels"><span id="bar-left">0.000 ETH spent</span><span id="bar-right">of 0.100 ETH</span></div>
+      <div class="bar-track"><div class="bar-fill" id="bar" style="width:0%"></div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Configure Limits</div>
+    <div class="cfg"><label>Per-tx max (ETH)</label><input type="number" id="cfg-pertx" value="0.05" step="0.01" min="0.001"/></div>
+    <div class="cfg"><label>Daily max (ETH)</label><input type="number" id="cfg-daily" value="0.1" step="0.01" min="0.01"/></div>
+    <button class="btn" style="margin-top:12px;width:100%" onclick="updateConfig()">Update Limits</button>
+  </div>
+</div>
+<div class="card">
+  <div class="controls">
+    <button class="btn btn-primary" onclick="runAgent()">▶ Run Agent Cycle</button>
+    <button class="btn" onclick="clearLog()">Clear Log</button>
+    <span style="font-size:12px;color:#666" id="hint">Click to simulate AI market analysis + OWS policy check</span>
+  </div>
+  <div class="card-title">Agent Decision Log</div>
+  <div class="log" id="log"><div class="empty">No decisions yet — run the agent to see OWS policy engine in action</div></div>
+</div>
+<script>
+async function runAgent() {
+  document.getElementById('hint').textContent = 'Analyzing market...';
+  const res = await fetch('/api/agent/run', {method:'POST'});
+  const d = await res.json();
+  addLogItem(d);
+  loadState();
+  document.getElementById('hint').textContent = 'Click to simulate AI market analysis + OWS policy check';
+}
+async function loadState() {
+  const res = await fetch('/api/state');
+  const s = await res.json();
+  document.getElementById('m-spent').textContent = s.dailySpent.toFixed(3);
+  document.getElementById('m-remain').textContent = Math.max(0, s.config.maxDailyEth - s.dailySpent).toFixed(3);
+  document.getElementById('m-approved').textContent = s.approved;
+  document.getElementById('m-denied').textContent = s.denied;
+  const pct = Math.min(100, (s.dailySpent / s.config.maxDailyEth) * 100);
+  const bar = document.getElementById('bar');
+  bar.style.width = pct + '%';
+  bar.className = 'bar-fill' + (pct > 80 ? ' danger' : pct > 60 ? ' warn' : '');
+  document.getElementById('bar-left').textContent = s.dailySpent.toFixed(3) + ' ETH spent';
+  document.getElementById('bar-right').textContent = 'of ' + s.config.maxDailyEth.toFixed(3) + ' ETH';
+  document.getElementById('r-pertx').textContent = s.config.maxPerTxEth.toFixed(3) + ' ETH';
+  document.getElementById('r-daily').textContent = s.config.maxDailyEth.toFixed(3) + ' ETH';
+}
+function addLogItem(d) {
+  const log = document.getElementById('log');
+  const empty = log.querySelector('.empty');
+  if (empty) empty.remove();
+  const time = new Date(d.timestamp).toLocaleTimeString();
+  const el = document.createElement('div');
+  el.className = 'log-item';
+  el.innerHTML = `
+    <div class="log-icon ${d.status}">${d.status === 'APPROVED' ? '✓' : '✕'}</div>
+    <div class="log-body">
+      <div class="log-top">
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="log-asset">${d.signal.asset} — ${d.signal.amount.toFixed(3)} ETH</span>
+          <span class="log-dir ${d.signal.direction}">${d.signal.direction}</span>
+        </div>
+        <span class="log-time">${time}</span>
+      </div>
+      <div class="log-reason">${d.signal.reason} · ${d.signal.confidence}% confidence</div>
+      <span class="log-policy ${d.policyResult.allow ? 'allow' : 'deny'}">OWS: ${d.policyResult.reason}</span>
+    </div>`;
+  log.insertBefore(el, log.firstChild);
+}
+async function updateConfig() {
+  const pertx = document.getElementById('cfg-pertx').value;
+  const daily = document.getElementById('cfg-daily').value;
+  await fetch('/api/config', {method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({maxPerTxEth: pertx, maxDailyEth: daily})});
+  loadState();
+}
+async function clearLog() {
+  await fetch('/api/log', {method:'DELETE'});
+  document.getElementById('log').innerHTML = '<div class="empty">No decisions yet — run the agent to see OWS policy engine in action</div>';
+  loadState();
+}
+loadState();
+</script>
+</body>
+</html>
