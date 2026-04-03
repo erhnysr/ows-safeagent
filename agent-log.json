@@ -1,0 +1,66 @@
+[
+  {
+    "timestamp": "2026-04-03T12:00:12.414Z",
+    "signal": {
+      "asset": "ETH",
+      "direction": "BUY",
+      "confidence": 91,
+      "reason": "Strong support at $2,800, volume spike",
+      "amount": 0.08
+    },
+    "policyResult": {
+      "allow": false,
+      "reason": "Per-tx limit: 0.08 ETH > 0.05 ETH max"
+    },
+    "txHash": null,
+    "status": "DENIED"
+  },
+  {
+    "timestamp": "2026-04-03T12:00:15.432Z",
+    "signal": {
+      "asset": "ETH",
+      "direction": "BUY",
+      "confidence": 83,
+      "reason": "EMA golden cross, high volume",
+      "amount": 0.06
+    },
+    "policyResult": {
+      "allow": false,
+      "reason": "Per-tx limit: 0.06 ETH > 0.05 ETH max"
+    },
+    "txHash": null,
+    "status": "DENIED"
+  },
+  {
+    "timestamp": "2026-04-03T12:00:20.221Z",
+    "signal": {
+      "asset": "ETH",
+      "direction": "BUY",
+      "confidence": 55,
+      "reason": "Moderate bullish sentiment",
+      "amount": 0.004
+    },
+    "policyResult": {
+      "allow": true,
+      "reason": "OK. Daily remaining: 0.0960 ETH"
+    },
+    "txHash": "0xc661d1867c3c581ecdf2bf558200002646111ca5e2c8cec00bf91702cabec312",
+    "status": "APPROVED"
+  },
+  {
+    "timestamp": "2026-04-03T12:00:31.064Z",
+    "signal": {
+      "asset": "ETH",
+      "direction": "BUY",
+      "confidence": 78,
+      "reason": "RSI oversold at 28, MACD bullish crossover",
+      "amount": 0.02
+    },
+    "policyResult": {
+      "allow": true,
+      "reason": "OK. Daily remaining: 0.0760 ETH"
+    },
+    "txHash": "0xa3859aefd42043eae1f1d2efbc2f621fc6abbdc479a6ce5907cd6b79c581ad19",
+    "status": "APPROVED"
+  }
+]
